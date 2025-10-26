@@ -1,4 +1,4 @@
-import "server-only";
+import 'server-only';
 
 import {
   and,
@@ -11,14 +11,14 @@ import {
   inArray,
   lte,
   sql,
-} from "drizzle-orm";
-import { db } from "@/db";
-import { tasks } from "@/db/schema";
+} from 'drizzle-orm';
+import { db } from '@/db';
+import { tasks } from '@/db/schema';
 
-import { filterColumns } from "@/lib/filter-columns";
-import { unstable_cache } from "@/lib/unstable-cache";
+import { filterColumns } from '@/lib/filter-columns';
+import { unstable_cache } from '@/lib/unstable-cache';
 
-import type { GetTasksSchema } from "./validations";
+import type { GetTasksSchema } from './validations';
 
 export async function getTasks(input: GetTasksSchema) {
   return await unstable_cache(
@@ -26,8 +26,8 @@ export async function getTasks(input: GetTasksSchema) {
       try {
         const offset = (input.page - 1) * input.perPage;
         const advancedTable =
-          input.filterFlag === "advancedFilters" ||
-          input.filterFlag === "commandFilters";
+          input.filterFlag === 'advancedFilters' ||
+          input.filterFlag === 'commandFilters';
 
         const advancedWhere = filterColumns({
           table: tasks,
@@ -52,7 +52,7 @@ export async function getTasks(input: GetTasksSchema) {
                       : undefined,
                     input.estimatedHours[1]
                       ? lte(tasks.estimatedHours, input.estimatedHours[1])
-                      : undefined,
+                      : undefined
                   )
                 : undefined,
               input.createdAt.length > 0
@@ -64,7 +64,7 @@ export async function getTasks(input: GetTasksSchema) {
                             const date = new Date(input.createdAt[0]);
                             date.setHours(0, 0, 0, 0);
                             return date;
-                          })(),
+                          })()
                         )
                       : undefined,
                     input.createdAt[1]
@@ -74,17 +74,17 @@ export async function getTasks(input: GetTasksSchema) {
                             const date = new Date(input.createdAt[1]);
                             date.setHours(23, 59, 59, 999);
                             return date;
-                          })(),
+                          })()
                         )
-                      : undefined,
+                      : undefined
                   )
-                : undefined,
+                : undefined
             );
 
         const orderBy =
           input.sort.length > 0
             ? input.sort.map((item) =>
-                item.desc ? desc(tasks[item.id]) : asc(tasks[item.id]),
+                item.desc ? desc(tasks[item.id]) : asc(tasks[item.id])
               )
             : [asc(tasks.createdAt)];
 
@@ -121,8 +121,8 @@ export async function getTasks(input: GetTasksSchema) {
     [JSON.stringify(input)],
     {
       revalidate: 1,
-      tags: ["tasks"],
-    },
+      tags: ['tasks'],
+    }
   )();
 }
 
@@ -146,25 +146,25 @@ export async function getTaskStatusCounts() {
               },
               {
                 todo: 0,
-                "in-progress": 0,
+                'in-progress': 0,
                 done: 0,
                 canceled: 0,
-              },
-            ),
+              }
+            )
           );
       } catch (_err) {
         return {
           todo: 0,
-          "in-progress": 0,
+          'in-progress': 0,
           done: 0,
           canceled: 0,
         };
       }
     },
-    ["task-status-counts"],
+    ['task-status-counts'],
     {
       revalidate: 3600,
-    },
+    }
   )();
 }
 
@@ -190,8 +190,8 @@ export async function getTaskPriorityCounts() {
                 low: 0,
                 medium: 0,
                 high: 0,
-              },
-            ),
+              }
+            )
           );
       } catch (_err) {
         return {
@@ -201,10 +201,10 @@ export async function getTaskPriorityCounts() {
         };
       }
     },
-    ["task-priority-counts"],
+    ['task-priority-counts'],
     {
       revalidate: 3600,
-    },
+    }
   )();
 }
 
@@ -223,9 +223,9 @@ export async function getEstimatedHoursRange() {
         return { min: 0, max: 0 };
       }
     },
-    ["estimated-hours-range"],
+    ['estimated-hours-range'],
     {
       revalidate: 3600,
-    },
+    }
   )();
 }
