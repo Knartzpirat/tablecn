@@ -70,7 +70,7 @@ import type {
 
 const DEBOUNCE_MS = 300;
 const THROTTLE_MS = 50;
-const OPEN_MENU_SHORTCUT = "f";
+const FILTER_SHORTCUT_KEY = "f";
 const REMOVE_FILTER_SHORTCUTS = ["backspace", "delete"];
 
 interface DataTableFilterListProps<TData>
@@ -179,34 +179,26 @@ export function DataTableFilterList<TData>({
     function onKeyDown(event: KeyboardEvent) {
       if (
         event.target instanceof HTMLInputElement ||
-        event.target instanceof HTMLTextAreaElement
+        event.target instanceof HTMLTextAreaElement ||
+        (event.target instanceof HTMLElement &&
+          event.target.contentEditable === "true")
       ) {
         return;
       }
 
       if (
-        event.key.toLowerCase() === OPEN_MENU_SHORTCUT &&
-        !event.ctrlKey &&
-        !event.metaKey &&
-        !event.shiftKey
+        event.key.toLowerCase() === FILTER_SHORTCUT_KEY &&
+        (event.ctrlKey || event.metaKey) &&
+        event.shiftKey
       ) {
         event.preventDefault();
-        setOpen(true);
-      }
-
-      if (
-        event.key.toLowerCase() === OPEN_MENU_SHORTCUT &&
-        event.shiftKey &&
-        filters.length > 0
-      ) {
-        event.preventDefault();
-        onFilterRemove(filters[filters.length - 1]?.filterId ?? "");
+        setOpen((prev) => !prev);
       }
     }
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [filters, onFilterRemove]);
+  }, []);
 
   const onTriggerKeyDown = React.useCallback(
     (event: React.KeyboardEvent<HTMLButtonElement>) => {
@@ -229,8 +221,13 @@ export function DataTableFilterList<TData>({
     >
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" onKeyDown={onTriggerKeyDown}>
-            <ListFilter />
+          <Button
+            variant="outline"
+            size="sm"
+            className="font-normal"
+            onKeyDown={onTriggerKeyDown}
+          >
+            <ListFilter className="text-muted-foreground" />
             Filter
             {filters.length > 0 && (
               <Badge
@@ -245,7 +242,7 @@ export function DataTableFilterList<TData>({
         <PopoverContent
           aria-describedby={descriptionId}
           aria-labelledby={labelId}
-          className="flex w-full max-w-[var(--radix-popover-content-available-width)] origin-[var(--radix-popover-content-transform-origin)] flex-col gap-3.5 p-4 sm:min-w-[380px]"
+          className="flex w-full max-w-(--radix-popover-content-available-width) flex-col gap-3.5 p-4 sm:min-w-[380px]"
           {...props}
         >
           <div className="flex flex-col gap-1">
@@ -405,7 +402,7 @@ function DataTableFilterItem<TData>({
               <SelectTrigger
                 aria-label="Select join operator"
                 aria-controls={joinOperatorListboxId}
-                className="h-8 rounded lowercase [&[data-size]]:h-8"
+                className="h-8 rounded lowercase data-size:h-8"
               >
                 <SelectValue placeholder={joinOperator} />
               </SelectTrigger>
@@ -445,7 +442,7 @@ function DataTableFilterItem<TData>({
           <PopoverContent
             id={fieldListboxId}
             align="start"
-            className="w-40 origin-[var(--radix-popover-content-transform-origin)] p-0"
+            className="w-40 p-0"
           >
             <Command>
               <CommandInput placeholder="Search fields..." />
@@ -501,16 +498,13 @@ function DataTableFilterItem<TData>({
         >
           <SelectTrigger
             aria-controls={operatorListboxId}
-            className="h-8 w-32 rounded lowercase [&[data-size]]:h-8"
+            className="h-8 w-32 rounded lowercase data-size:h-8"
           >
             <div className="truncate">
               <SelectValue placeholder={filter.operator} />
             </div>
           </SelectTrigger>
-          <SelectContent
-            id={operatorListboxId}
-            className="origin-[var(--radix-select-content-transform-origin)]"
-          >
+          <SelectContent id={operatorListboxId}>
             {filterOperators.map((operator) => (
               <SelectItem
                 key={operator.value}
@@ -648,7 +642,7 @@ function onFilterInputRender<TData>({
             id={inputId}
             aria-controls={inputListboxId}
             aria-label={`${columnMeta?.label} boolean filter`}
-            className="h-8 w-full rounded [&[data-size]]:h-8"
+            className="h-8 w-full rounded data-size:h-8"
           >
             <SelectValue placeholder={filter.value ? "True" : "False"} />
           </SelectTrigger>
@@ -703,10 +697,7 @@ function onFilterInputRender<TData>({
               />
             </Button>
           </FacetedTrigger>
-          <FacetedContent
-            id={inputListboxId}
-            className="w-[200px] origin-[var(--radix-popover-content-transform-origin)]"
-          >
+          <FacetedContent id={inputListboxId} className="w-[200px]">
             <FacetedInput
               aria-label={`Search ${columnMeta?.label} options`}
               placeholder={columnMeta?.placeholder ?? "Search options..."}
@@ -770,13 +761,14 @@ function onFilterInputRender<TData>({
           <PopoverContent
             id={inputListboxId}
             align="start"
-            className="w-auto origin-[var(--radix-popover-content-transform-origin)] p-0"
+            className="w-auto p-0"
           >
             {filter.operator === "isBetween" ? (
               <Calendar
                 aria-label={`Select ${columnMeta?.label} date range`}
-                mode="range"
+                autoFocus
                 captionLayout="dropdown"
+                mode="range"
                 selected={
                   dateValue.length === 2
                     ? {
@@ -802,8 +794,9 @@ function onFilterInputRender<TData>({
             ) : (
               <Calendar
                 aria-label={`Select ${columnMeta?.label} date`}
-                mode="single"
+                autoFocus
                 captionLayout="dropdown"
+                mode="single"
                 selected={
                   dateValue[0] ? new Date(Number(dateValue[0])) : undefined
                 }
