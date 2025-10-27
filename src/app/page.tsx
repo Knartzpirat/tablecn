@@ -38,7 +38,7 @@ export default function IndexPage(props: IndexPageProps) {
           />
         }
       >
-        <FeatureFlagsProvider>
+        <FeatureFlagsProvider tableId="tasks">
           <TasksTableWrapper {...props} />
         </FeatureFlagsProvider>
       </Suspense>

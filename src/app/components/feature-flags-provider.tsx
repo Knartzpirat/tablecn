@@ -33,11 +33,17 @@ export function useFeatureFlags() {
 
 interface FeatureFlagsProviderProps {
   children: React.ReactNode;
+  tableId: string;
 }
 
-export function FeatureFlagsProvider({ children }: FeatureFlagsProviderProps) {
+export function FeatureFlagsProvider({
+  children,
+  tableId,
+}: FeatureFlagsProviderProps) {
+  const queryParamKey = `${tableId}FilterFlag`;
+
   const [filterFlag, setFilterFlag] = useQueryState<FilterFlag | null>(
-    "filterFlag",
+    queryParamKey,
     {
       parse: (value) => {
         if (!value) return null;
